@@ -33,8 +33,13 @@ def upload():
     print("Saved")
     #Sending image to Roboflow API
     pred = model.predict('image.jpg', confidence=10)
+    pred.save()
     pred_json = pred.json()
     print(pred_json)
+    if len(pred_json['predictions']) == 0:
+        return jsonify({
+            "message": "Product can not be detected, try to capture another photo."
+        }), 500
     doc_id = pred_json['predictions'][0]['class']
     print(doc_id)
 
@@ -47,6 +52,7 @@ def upload():
         product_name = document_data['name']
         product_price = document_data['price']
         return jsonify({
+            "message":"",
             "name":product_name,
             "price":product_price,
             "class":doc_id
@@ -73,9 +79,13 @@ def register():
 
     #Validating credentials
     if phone_num == "" or user_name == "" or password == "":
-        return "Error adding user"
+        return jsonify({
+            "message":"Error adding user"
+        }),500
     if doc.exists:
-        return "Username already taken"
+        return jsonify({
+            "message":"Username already taken"
+        }),500
     if doc_ref.set({
         "username":user_name,
         "password":db_password,
